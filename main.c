@@ -75,6 +75,8 @@ int main(int argc, char *argv[]){
 
 
 	
+	//test image
+	SDL_Texture* texture = GetTesture("test.png");
 
 
 
@@ -112,7 +114,21 @@ int main(int argc, char *argv[]){
 
 
 
-		
+		//test image
+		SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);//draw white
+		SDL_RenderClear(renderer);//clear screen
+
+
+		SDL_Rect rect;//rectangle to draw in
+		rect.w = maxside/4;//centered to mouse with 1/4 of small side
+		rect.h = maxside/4;
+		rect.x = MouseX - rect.w / 2;
+		rect.y = MouseY - rect.h / 2;
+		SDL_RenderCopy(renderer, texture, NULL, &rect);//draw image
+		SDL_RenderPresent(renderer);//update screen
+
+
+
 
 
 
@@ -194,4 +210,26 @@ void Clicked(long int x, long int y){//x and y positions clicked
 	MouseX = event.button.x;//set x and y position of mouse
 	MouseY = event.button.y;
 	return;//exit function
+}
+
+
+
+
+
+
+
+SDL_Texture* GetTesture(const char *file){//make texture from this file
+	char image[256] = RESOURCES;//folder path
+	strcat(image, file);//append path
+	SDL_Surface* surface = IMG_Load(image);//load surface
+	if (surface == NULL){//if it could not be loaded
+		printf("could not load image: %s\n", IMG_GetError());//error message
+		exit(EXIT_FAILURE);//exit
+	}
+	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);//get texture from loaded image
+	if (surface == NULL){//if it could not be converted to texture
+		printf("could not create texture: %s\n", SDL_GetError());//error message
+		exit(EXIT_FAILURE);//exit
+	}
+	return texture;//return texture
 }

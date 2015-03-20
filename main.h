@@ -37,5 +37,6 @@ int EventFilter(void* userdata, SDL_Event* e);//event filter
 void Quit(void);//quit everything
 void GetDisplay(void);//get display
 void Clicked(int x, int y);//x and y positions clicked
+SDL_Texture* GetTesture(const char *file);//make texture from this file
 
 #endif
