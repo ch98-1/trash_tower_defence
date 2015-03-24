@@ -16,8 +16,11 @@
 #define WINDOW_NAME "Trash Tower Defence"
 #define DELAY 10 //default delay
 #define SLEEP_DELAY 1000 //delay at sleep
+
+//paths
 #define RESOURCES "resources/" //media resources path. 
-#define SAVE "resources/save.txt" //saved data file path
+#define FONTS "fonts/" //fonts path. Inside media resources path.
+#define SAVE "resources/save.txt" //saved data file path.
 
 
 
@@ -38,5 +41,6 @@ void Quit(void);//quit everything
 void GetDisplay(void);//get display
 void Clicked(int x, int y);//x and y positions clicked
 SDL_Texture* GetTesture(const char *file);//make texture from this file
+TTF_Font* GetFont(const char *file, int size);//get font from file
 
 #endif

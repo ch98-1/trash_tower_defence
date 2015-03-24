@@ -36,7 +36,7 @@ int main(int argc, char *argv[]){
 
 	
 	//quit SDL at exit
-	atexit(SDL_Quit);
+	atexit(Quit);
 
 
 	GetDisplay();//get display
@@ -75,10 +75,11 @@ int main(int argc, char *argv[]){
 
 
 	
-	//test image
+	//test image 
 	SDL_Texture* texture = GetTesture("test.png");
-
-
+	//test font
+	TTF_Font* font = GetFont("OpenSans-Regular.ttf", 72);
+	SDL_Texture* text = SDL_CreateTextureFromSurface(renderer, TTF_RenderText_Blended(font, "hello world", (SDL_Color){ 0, 0, 0 }));
 
 
 	while (1) {
@@ -125,6 +126,14 @@ int main(int argc, char *argv[]){
 		rect.x = MouseX - rect.w / 2;
 		rect.y = MouseY - rect.h / 2;
 		SDL_RenderCopy(renderer, texture, NULL, &rect);//draw image
+		int w, h, id;
+		long stuff;
+		SDL_QueryTexture(text, &stuff, &id, &w, &h);
+		rect.w = w;
+		rect.h = h;
+		rect.x = 0;
+		rect.y = 0;
+		SDL_RenderCopy(renderer, text, NULL, &rect);//draw text
 		SDL_RenderPresent(renderer);//update screen
 
 
@@ -137,7 +146,7 @@ int main(int argc, char *argv[]){
 		SDL_Delay(delay);
 	}
 
-	Quit();//if it somehow reaches here
+	exit(EXIT_SUCCESS);//if it somehow reaches here
 }
 
 
@@ -151,7 +160,7 @@ int main(int argc, char *argv[]){
 int EventFilter(void* userdata, SDL_Event* e){//event filter
 	switch (e->type) {//for each event type
 	case SDL_QUIT://quit everything
-		Quit();//quit everything
+		exit(EXIT_SUCCESS);//exit
 		return 0;//delete that event
 		break;//get out
 	default://for everything else
@@ -167,7 +176,11 @@ int EventFilter(void* userdata, SDL_Event* e){//event filter
 
 
 void Quit(void){//quit everything
-	exit(EXIT_SUCCESS);//exit
+
+	IMG_Quit();//quit SDL_Image
+	TTF_Quit();//quit SDL_TTF
+	SDL_Quit();//quit SDL
+	
 	return;//exit function if it didn't exit for some reason
 }
 
@@ -232,4 +245,22 @@ SDL_Texture* GetTesture(const char *file){//make texture from this file
 		exit(EXIT_FAILURE);//exit
 	}
 	return texture;//return texture
+}
+
+
+
+
+
+
+
+TTF_Font* GetFont(const char *file, int size){//get font from file
+	char fontfile[256] = RESOURCES;//folder path
+	strcat(fontfile, FONTS);//append fonts path
+	strcat(fontfile, file);//append path
+	TTF_Font *font = TTF_OpenFont(fontfile, size);//get font
+	if (font == NULL){//if it could not be loaded
+		printf("could not load font: %s\n", TTF_GetError());//error message
+		exit(EXIT_FAILURE);//exit
+	}
+	return font;//return font
 }
