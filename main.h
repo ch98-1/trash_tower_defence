@@ -54,16 +54,18 @@ int pause;//if game is paused or not
 
 
 typedef struct data{
+	struct data *last;//1 element back
 	int oid;//object id
 	int frame;//which frame it is in
 	int x, y;//x and y position
-	struct data *next;//linked list
+	long int health;//health of object
+	struct data *next;//1 element next
 }Data;
 
 typedef void(*Button)(Data *);//function for buttons
 
 typedef struct object{//array of clickable object definitions
-	int iw, ih;//width and height of image to display
+	int iw, ih;//width and height of image to display same as hitbox
 	int frames;//number of frames
 	SDL_Texture *texture;//id of pointer to texture
 	Button button;//button function to run if clicked on
@@ -72,6 +74,8 @@ typedef struct object{//array of clickable object definitions
 	double w, h;//width, and hight in scale from maxside
 	int center;//if centering on x and y or not
 	int selectable;//if selectable or not
+	int damageable;//if object is possible to damage or not
+	long int maxhealth;//maximum health if damageable
 }Object;
 
 Object **objects;//object defenitions
@@ -80,7 +84,8 @@ unsigned long int objectssize;//size of objects array
 SDL_Texture **textures;//array of texture pointers
 unsigned long int texturessize;//size of textures array
 
-Data *start;//first object to draw in the linked list
+Data *start;//first object to draw in the linked list, bottom layer
+Data *end;//last object to draw in the linked list, top layer
 
 uint32_t delay;//amount of delay for each frame
 long int MouseX, MouseY;//x and y position of mouse / touch
@@ -116,7 +121,11 @@ void LoadObjects(void);//load all objects
 void DrawEdge(void);//draw edge border of screen
 unsigned int AddTexture(SDL_Texture *texture);//add texture to memory and return that id
 unsigned int AddObject(Object *object);//add object to memory and return that id
-Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button button, Button status, Button update, double w, double h, int center, int selectable);//make object with that paramiters
+Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button button, Button status, Button update, double w, double h, int center, int selectable, int damageable, long int maxhealth);//make object with that paramiters
+void AddData(int oid, int frame, int x, int y, long int health);//adds this data at end
+void RemoveData(Data *data);//remove this data
+void ClearData(void);//clear all data from linked list
+Data *GetLayer(int x, int y, int layer);//get object at that point and layer. return null if no object exists
 
 
 #endif

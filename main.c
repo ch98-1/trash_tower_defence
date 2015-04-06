@@ -170,6 +170,10 @@ int main(int argc, char *argv[]){
 				DrawBase();//draw basic stuff for normal play
 
 
+
+
+
+				//test
 				DrawIMG(textures[0], MouseX, MouseY, NULL, 0.25, 0.25, 1);//draw image centered at mouse
 				int x = ((int)((clock() * 100) / CLOCKS_PER_SEC)) % maxside;
 				int y = baseY;
@@ -177,10 +181,21 @@ int main(int argc, char *argv[]){
 				for (y = 0; y < maxside; y += maxside / 32){
 					DrawText(textures[1], x, y, NULL);//draw text
 				}
+				//end test
 
 
-
-
+				Data *current;//current data pointer
+				current = start;
+				while (current != NULL){//until current is null
+					Object *object = objects[current->oid];//object for this data
+					SDL_Rect rect;//rectangle to draw
+					rect.w = object->iw;//set width and height of image to display
+					rect.h = object->ih;
+					rect.x = (int)(object->iw * current->frame);//set x and y of image to draw
+					rect.y = 0;
+					DrawIMG(object->texture, current->x, current->y, &rect, object->w, object->h, object->center);//draw that texture
+					current = current->next;//set current to next
+				}
 
 				DrawEdge();//draw edge
 				SDL_RenderPresent(renderer);//update screen
@@ -290,6 +305,7 @@ void Quit(void){//quit everything
 	}
 	free(textures);//free textures array
 	free(objects);//free objects array
+	ClearData();//clear all data from linked list
 	SDL_DestroyWindow(window);//destroy window
 	IMG_Quit();//quit SDL_Image
 	TTF_Quit();//quit SDL_TTF
@@ -482,7 +498,7 @@ void DrawEdge(void){//draw edge border of screen
 
 
 int LoadFile(const char *file){//load file in to memory. return 0 for success
-
+	ClearData;//clear data before loading file
 
 
 
@@ -658,7 +674,7 @@ unsigned int AddObject(Object *object){//add object to memory and return that id
 
 
 
-Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button button, Button status, Button update, double w, double h, int center, int selectable){//make object with that paramiters
+Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button button, Button status, Button update, double w, double h, int center, int selectable, int damageable, long int maxhealth){//make object with that paramiters
 	Object *object = malloc(sizeof(Object));//make that object
 	object->iw = iw;//set each variable
 	object->ih = ih;
@@ -671,9 +687,138 @@ Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button butt
 	object->h = h;
 	object->center = center;
 	object->selectable = selectable;
+	object->damageable = damageable;
+	object->maxhealth = maxhealth;
 
 	return object;//return the created object
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void AddData(int oid, int frame, int x, int y, long int health){//adds this data at end
+	Data *data = malloc(sizeof(Data));//make new data object
+	data->oid = oid;//set variables
+	data->frame = frame;
+	data->x = x;
+	data->y = y;
+	data->health = health;
+	if (start == NULL && end == NULL){//if both were null
+		start = data;//set data to both
+		end = data;
+		data->last = NULL;//set fronmt and back to null
+		data->next = NULL;
+	}
+	else if (start == end){//if there is only one element
+		start->next = data;//set nest to new data
+		end = data;//set end to new data
+		data->last = start;//set back
+		data->next = NULL;//set next to null
+	}
+	else{//if both first and second was different element
+		end->next = data;//set next to new data
+		Data *last = end;//make copy of end
+		end = data;//set end to new data
+		data->last = last;//set back
+		data->next = NULL;//set next to null
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void RemoveData(Data *data){//remove this data
+	Data *last = data->last;//copy last and next
+	Data *next = data->next;
+	free(data);//free that data
+	last->next = next;//set new last and next
+	next->last = last;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void ClearData(void){//clear all data from linked list
+	while (start != NULL){//until start is null
+		Data *next = start->next;//copy next
+		free(start);//free memory of next
+		start = next;//set start to next
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+Data *GetLayer(int x, int y, int layer){//get object at that point and layer. return null if no object exists
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
