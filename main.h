@@ -42,6 +42,8 @@ SDL_Event event;//event
 int width, height, maxside;//width and hight and smallest of 2 side of window
 int baseX, baseY;//x and y starting point
 
+SDL_Texture *somethingwentwrong;//image to display if something goes wrong
+
 
 double money, landfill, speed;//status of game
 long int month;
@@ -114,7 +116,7 @@ void DrawBase(void);//draw basic stuff
 void Message(const char *text);//display message in 
 int LoadFile(const char *file);//load file in to memory. return 0 for success
 void Save(void);//save in to save file
-void LoadMenue(void);//load menue texts
+void LoadMenue(void);//load map files and menue texts
 void DrawText(SDL_Texture *texture, int x, int y, SDL_Rect *rect);//draw rect of texture at x and y position. Null rect for whole texture. -32000 or CENTERED to get that axis centered
 void DrawIMG(SDL_Texture *texture, int x, int y, SDL_Rect *rect, double w, double h, int center);//draw rect of texture at x and y position at scale from maxside. Null rect for whole texture. -32000 or CENTERED to get that axis centered. set center to 1 to center to x and y
 void LoadObjects(void);//load all objects

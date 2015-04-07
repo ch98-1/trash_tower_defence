@@ -72,10 +72,24 @@ int main(int argc, char *argv[]){
 
 	//initialise and load stuff
 	delay = DELAY;//10 ms delay
+	speed = 1;//default of normal speed
+	map = -1;//no map is -1
 	Resize();//resize stuff
+	start = NULL;//set start and end to null
+	end = NULL;
+	somethingwentwrong = GetTextTexture(font_64, "somethingwentwrong", 0, 0, 0);//image to display if something went wrong
+
+	//loading message
+	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);//draw white
+	SDL_RenderClear(renderer);//clear screen
+	SDL_Texture *loading = GetTextTexture(font_16, "Loading", 0, 0, 0);//loading message
+	DrawText(loading, CENTERED, CENTERED, NULL);//draw loading message
+	SDL_RenderPresent(renderer);//present loading message
+	SDL_DestroyTexture(loading);//don't need this texture
+
 	menue = 0;//default no menue at start
 	message = 0;//no message at start
-	LoadMenue();//load menue textures
+	LoadMenue();//load map files and menue texts
 	if (LoadFile(SAVE)){//if save file could not be loaded
 		menue = 1;//need to display menue
 		Message("Could not load save file");//send message that save file could not be loaded
@@ -92,8 +106,6 @@ int main(int argc, char *argv[]){
 
 	//Load textures and objects
 	LoadObjects();
-
-
 
 
 
@@ -185,7 +197,7 @@ int main(int argc, char *argv[]){
 
 
 				Data *current;//current data pointer
-				current = start;
+				current = start;//set current to start
 				while (current != NULL){//until current is null
 					Object *object = objects[current->oid];//object for this data
 					SDL_Rect rect;//rectangle to draw
@@ -204,7 +216,7 @@ int main(int argc, char *argv[]){
 		}
 
 
-		SDL_Delay(delay);
+		SDL_Delay(delay / speed);
 	}
 
 	exit(EXIT_SUCCESS);//if it somehow reaches here
@@ -219,6 +231,7 @@ int main(int argc, char *argv[]){
 
 
 void Message(const char *text){//display message 
+	SDL_DestroyTexture(messagetexture);//delete message texture before getting text
 	messagetexture = GetTextTexture(font_32, text, 0, 0, 0);//render black text of the message
 	message = 1;//set to display message
 }
@@ -296,6 +309,8 @@ void Quit(void){//quit everything
 	TTF_CloseFont(font_46);
 	TTF_CloseFont(font_64);
 	SDL_DestroyRenderer(renderer);//destroy renderer
+	SDL_DestroyTexture(somethingwentwrong);//destroy something went wrong texture
+	SDL_DestroyTexture(messagetexture);//delete message texture
 	int i;//counter
 	for (i = 0; i < texturessize / sizeof(SDL_Texture*); i++){//destroy each texture
 		SDL_DestroyTexture(textures[i]);//destroy texture
@@ -352,9 +367,15 @@ void Clicked(long int x, long int y){//x and y positions clicked
 		if (clicked > 2 && clicked < 29){ //if within the range of levels
 			map = clicked - 3;//get clicked button
 			menue = LoadFile(maps[map][1]);//load that level
+			if (menue == 1){//if still in menue
+				map = -1;//still has no map yet
+			}
 		}
 		if (clicked == 29){//Canceld
 			menue = 0;//stop showing menue
+			if (map == -1){//if there is no map
+				menue = 1;//go to menue
+			}
 		}
 	}
 	else if(!pause){//if in normal play mode and not paused
@@ -362,7 +383,9 @@ void Clicked(long int x, long int y){//x and y positions clicked
 	}
 
 
-	message = 0;//reset message
+	if (message == 2){//if message is allady display'd
+		message = 0;//reset message
+	}
 	MouseX = event.button.x - baseX;//set x and y position of mouse from square
 	MouseY = event.button.y - baseY;
 	return;//exit function
@@ -380,12 +403,12 @@ SDL_Texture* GetTexture(const char *file){//make texture from this file
 	SDL_Surface* surface = IMG_Load(image);//load surface
 	if (surface == NULL){//if it could not be loaded
 		printf("could not load image: %s\n", IMG_GetError());//error message
-		exit(EXIT_FAILURE);//exit
+		return somethingwentwrong;//something went wrong
 	}
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);//get texture from loaded image
 	if (surface == NULL){//if it could not be converted to texture
 		printf("could not create texture: %s\n", SDL_GetError());//error message
-		exit(EXIT_FAILURE);//exit
+		return somethingwentwrong;//something went wrong
 	}
 	SDL_FreeSurface(surface);//free surface
 	return texture;//return texture
@@ -499,6 +522,20 @@ void DrawEdge(void){//draw edge border of screen
 
 int LoadFile(const char *file){//load file in to memory. return 0 for success
 	ClearData;//clear data before loading file
+	char filename[256];//folder path
+	if (strcmp(file, SAVE)) {//if file is not save file
+		strcpy(filename, RESOURCES);//add folder path
+	}
+	else{//if file is save file
+		strcpy(filename, "");//empty path
+	}
+	strcat(filename, file);//append path
+	FILE *mapfile = fopen(filename, "r");//open map file for reading
+	if (mapfile == NULL){//if map file could not be opened
+		Message("Map could not be opened");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
+	
 
 
 
@@ -535,9 +572,26 @@ void Save(void){//save in to save file
 
 
 
-void LoadMenue(void){
-	menuetexture[0] = GetTextTexture(font_46, "Choose Level", 0, 0, 0);//Title of menue
+void LoadMenue(void){//load map files and menue texts
+	char mapfilename[256] = RESOURCES;//folder path
+	strcat(mapfilename, MAP);//append path
+	FILE *mapfile = fopen(mapfilename, "r");//open map file for reading
+	if (mapfile == NULL){//if map file could not be opened
+		printf("mapfile %s could not be opend \n", mapfilename);//send error message
+		exit(EXIT_FAILURE);//exit
+	}
 	int i;//counter
+	for (i = 0; i < 26; i++){//for each map
+		if (fgets(maps[i][0], 255, mapfile) == NULL){//if map file could not be read
+			printf("mapfile %s could not be read \n", mapfilename);//send error message
+			exit(EXIT_FAILURE);//exit
+		}
+		if (fgets(maps[i][1], 255, mapfile) == NULL){//if map file could not be read
+			printf("mapfile %s could not be read \n", mapfilename);//send error message
+			exit(EXIT_FAILURE);//exit
+		}
+	}
+	menuetexture[0] = GetTextTexture(font_46, "Choose Level", 0, 0, 0);//Title of menue
 	char text[512];
 	for (i = 0; i < 26; i++){//for each map
 		sprintf(text, "%d: %s", i, maps[i][0]);//start name with number then 
@@ -800,8 +854,25 @@ void ClearData(void){//clear all data from linked list
 
 
 Data *GetLayer(int x, int y, int layer){//get object at that point and layer. return null if no object exists
-
-
+	Data *current;//current data pointer
+	current = end;//set current to end
+	int l = 0;//layer
+	while (current != NULL){//until current is null
+		Object *object = objects[current->oid];//object for this data
+		SDL_Rect rect;//rectangle to draw
+		rect.w = object->iw;//set width and height of image to display
+		rect.h = object->ih;
+		rect.x = (int)(object->iw * current->frame);//set x and y of image to draw
+		rect.y = 0;
+		if (x > current->x && x < current->x + object->iw && y > current->y && y < current->y + object->ih){//if object is in that boundry
+			l++;//count layer up
+			if (l == layer){//if in correct layer
+				return current;//return current object
+			}
+		}
+		current = current->last;//set current to last
+	}
+	return NULL;
 }
 
 

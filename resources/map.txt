@@ -1,0 +1,52 @@
+middle of nowhere
+map0.txt
+community in sahara desert
+map1.txt
+community of monks
+map2.txt
+small community in nevada
+map3.txt
+town in middle of nowhere
+map4.txt
+small town in Canada
+map5.txt
+small town in US
+map6.txt
+larger town in Canada
+map7.txt
+larger town in USA
+map8.txt
+very small city in Alaska
+map9.txt
+very small city in Russia
+map10.txt
+very small city in USA
+map11.txt
+small city in Canada
+map12.txt
+small city in India
+map13.txt
+small city in USA
+map14.txt
+medium city in Africa
+map15.txt
+medium city in Mexico
+map16.txt
+medium city in USA
+map17.txt
+larger city in USA
+map18.txt
+Seattle
+map19.txt
+Las Vegas
+map20.txt
+Mexico City
+map21.txt
+New York
+map22.txt
+Shanghai
+map23.txt
+Delhi
+map24.txt
+Tokyo
+map25.txt
