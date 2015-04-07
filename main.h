@@ -43,7 +43,7 @@ int width, height, maxside;//width and hight and smallest of 2 side of window
 int baseX, baseY;//x and y starting point
 
 SDL_Texture *somethingwentwrong;//image to display if something goes wrong
-
+SDL_Texture *menuebutton;//manue button texture
 
 double money, landfill, speed;//status of game
 long int month;
@@ -59,7 +59,7 @@ typedef struct data{
 	struct data *last;//1 element back
 	int oid;//object id
 	int frame;//which frame it is in
-	int x, y;//x and y position
+	double x, y;//x and y position normalised
 	long int health;//health of object
 	struct data *next;//1 element next
 }Data;
@@ -90,7 +90,7 @@ Data *start;//first object to draw in the linked list, bottom layer
 Data *end;//last object to draw in the linked list, top layer
 
 uint32_t delay;//amount of delay for each frame
-long int MouseX, MouseY;//x and y position of mouse / touch
+double MouseX, MouseY;//x and y position of mouse / touch normalised
 
 
 //fonts for different sizes (1/n of maxside)
@@ -117,17 +117,17 @@ void Message(const char *text);//display message in
 int LoadFile(const char *file);//load file in to memory. return 0 for success
 void Save(void);//save in to save file
 void LoadMenue(void);//load map files and menue texts
-void DrawText(SDL_Texture *texture, int x, int y, SDL_Rect *rect);//draw rect of texture at x and y position. Null rect for whole texture. -32000 or CENTERED to get that axis centered
-void DrawIMG(SDL_Texture *texture, int x, int y, SDL_Rect *rect, double w, double h, int center);//draw rect of texture at x and y position at scale from maxside. Null rect for whole texture. -32000 or CENTERED to get that axis centered. set center to 1 to center to x and y
+void DrawText(SDL_Texture *texture, double x, double y, SDL_Rect *rect, int center);//draw rect of texture at x and y position normalised. Null rect for whole texture. set center to 1 to center to x and y
+void DrawIMG(SDL_Texture *texture, double x, double y, SDL_Rect *rect, double w, double h, int center);//draw rect of texture at x and y position normalised at scale from maxside. Null rect for whole texture. set center to 1 to center to x and y
 void LoadObjects(void);//load all objects
 void DrawEdge(void);//draw edge border of screen
 unsigned int AddTexture(SDL_Texture *texture);//add texture to memory and return that id
 unsigned int AddObject(Object *object);//add object to memory and return that id
 Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button button, Button status, Button update, double w, double h, int center, int selectable, int damageable, long int maxhealth);//make object with that paramiters
-void AddData(int oid, int frame, int x, int y, long int health);//adds this data at end
+void AddData(int oid, int frame, double x, double y, long int health);//adds this data at end
 void RemoveData(Data *data);//remove this data
 void ClearData(void);//clear all data from linked list
-Data *GetLayer(int x, int y, int layer);//get object at that point and layer. return null if no object exists
+Data *GetLayer(double x, double y, int layer);//get object at that point and layer. return null if no object exists
 
 
 #endif

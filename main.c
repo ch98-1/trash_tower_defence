@@ -78,12 +78,13 @@ int main(int argc, char *argv[]){
 	start = NULL;//set start and end to null
 	end = NULL;
 	somethingwentwrong = GetTextTexture(font_64, "somethingwentwrong", 0, 0, 0);//image to display if something went wrong
+	menuebutton = GetTexture("menuebutton.png");//texture for menue button
 
 	//loading message
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);//draw white
 	SDL_RenderClear(renderer);//clear screen
 	SDL_Texture *loading = GetTextTexture(font_16, "Loading", 0, 0, 0);//loading message
-	DrawText(loading, CENTERED, CENTERED, NULL);//draw loading message
+	DrawText(loading, 0.5, 0.5, NULL, 1);//draw loading message
 	SDL_RenderPresent(renderer);//present loading message
 	SDL_DestroyTexture(loading);//don't need this texture
 
@@ -120,8 +121,8 @@ int main(int argc, char *argv[]){
 					Clicked(event.button.x - baseX, event.button.y - baseY);//run clicked function 
 				break;//get out
 			case SDL_MOUSEMOTION://when mouse moved
-					MouseX = event.button.x - baseX;//set x and y position of mouse from square
-					MouseY = event.button.y - baseY;
+				MouseX = (double)(event.button.x - baseX) / maxside;//set x and y position of mouse from square normalised
+				MouseY = (double)(event.button.y - baseY) / maxside;
 				break;//get out
 			default://for everything else
 				//ignore event
@@ -136,7 +137,7 @@ int main(int argc, char *argv[]){
 			if (message == 1){//if message was not displayd yet
 				SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);//draw white
 				SDL_RenderClear(renderer);//clear screen
-				DrawText(messagetexture, CENTERED, CENTERED, NULL);//draw message at center
+				DrawText(messagetexture, 0.5, 0.5, NULL, 1);//draw message at center
 				DrawEdge();//draw edge
 				SDL_RenderPresent(renderer);//update screen
 				message = 2;
@@ -153,13 +154,9 @@ int main(int argc, char *argv[]){
 					SDL_Rect rect;//rectangle to draw
 					long int y;//y position
 					int i = 0;//counter
-					for (y = maxside / 16; y < maxside - maxside / 16; y += maxside / 32){
-						rect.w = maxside;//rectangle to draw
-						rect.h = maxside / 32;
-						rect.x = baseX;
-						rect.y = y;
-						SDL_RenderDrawRect(renderer, &rect);//draw rectangle
-						DrawText(menuetexture[i], CENTERED, y, NULL);
+					for (y = 2; y < 30; y++){//for each button
+						if (y > 2) DrawIMG(menuebutton, 0.5, (double)(y + 0.5) / 32, NULL, 0.5, 0.03125, 1);//draw button texture
+						DrawText(menuetexture[i], 0.5, (double)(y + 0.5) / 32, NULL, 1);//draw button text
 						i++;//count i up
 					}
 
@@ -189,9 +186,9 @@ int main(int argc, char *argv[]){
 				DrawIMG(textures[0], MouseX, MouseY, NULL, 0.25, 0.25, 1);//draw image centered at mouse
 				int x = ((int)((clock() * 100) / CLOCKS_PER_SEC)) % maxside;
 				int y = baseY;
-				DrawText(textures[1], x, baseY, NULL);//draw that text at top
+				DrawText(textures[1], x/maxside, baseY/maxside, NULL, 1);//draw that text at top
 				for (y = 0; y < maxside; y += maxside / 32){
-					DrawText(textures[1], x, y, NULL);//draw text
+					DrawText(textures[1], x/maxside, y/maxside, NULL, 1);//draw text
 				}
 				//end test
 
@@ -386,8 +383,9 @@ void Clicked(long int x, long int y){//x and y positions clicked
 	if (message == 2){//if message is allady display'd
 		message = 0;//reset message
 	}
-	MouseX = event.button.x - baseX;//set x and y position of mouse from square
-	MouseY = event.button.y - baseY;
+
+	MouseX = (double)(x) / maxside;//set x and y position of mouse from square normalised
+	MouseY = (double)(y) / maxside;
 	return;//exit function
 }
 
@@ -510,7 +508,7 @@ void DrawBase(void){//draw basic stuff
 
 
 void DrawEdge(void){//draw edge border of screen
-	DrawIMG(textures[2], CENTERED, CENTERED, NULL, 2, 2, 1);//centered at twice the size of box
+	DrawIMG(textures[2], 0.5, 0.5, NULL, 2, 2, 1);//centered at twice the size of box
 }
 
 
@@ -613,17 +611,20 @@ void LoadMenue(void){//load map files and menue texts
 
 
 
-void DrawText(SDL_Texture *texture, int x, int y, SDL_Rect *rect){//draw rect of texture at x and y position. Null rect for whole texture. -32000 or CENTERED to get that axis centered
+void DrawText(SDL_Texture *texture, double x, double y, SDL_Rect *rect, int center){//draw rect of texture at x and y position normalised. Null rect for whole texture. set center to 1 to center to x and y
 	SDL_Rect dest;
 	int w, h, access;//value to fill up
 	long format;
 	SDL_QueryTexture(texture, &format, &access, &w, &h);//get text box size
 	dest.w = (int) w;//set width and height
 	dest.h = (int) h;
-	dest.x = x;//set x and y
-	dest.y = y;
-	if (x == CENTERED) dest.x = (maxside / 2 - w / 2);//center it if set to centered
-	if (y == CENTERED) dest.y = (maxside / 2 - h / 2);
+	dest.x = (int)(x * maxside);//set x and y
+	dest.y = (int)(y * maxside);
+
+	if (center){
+		dest.x = dest.x - dest.w / 2;//set x and y centered to x and y
+		dest.y = dest.y - dest.h / 2;
+	}
 
 	dest.x += baseX;//set origin to basex and y
 	dest.y += baseY;
@@ -641,14 +642,13 @@ void DrawText(SDL_Texture *texture, int x, int y, SDL_Rect *rect){//draw rect of
 
 
 
-void DrawIMG(SDL_Texture *texture, int x, int y, SDL_Rect *rect, double w, double h, int center){//draw rect of texture at x and y position at scale from maxside. Null rect for whole texture. -32000 or CENTERED to get that axis centered. set center to 1 to center to x and y
+void DrawIMG(SDL_Texture *texture, double x, double y, SDL_Rect *rect, double w, double h, int center){//draw rect of texture at x and y position at scale from maxside normalised. Null rect for whole texture. set center to 1 to center to x and y
 	SDL_Rect dest;
 	dest.w = (int) (maxside * w);//set width and height
 	dest.h = (int) (maxside * h);
-	dest.x = x;//set x and y
-	dest.y = y;
-	if (x == CENTERED) dest.x = (int)(maxside / 2 - w / 2);//center it if set to centered
-	if (y == CENTERED) dest.y = (int)(maxside / 2 - h / 2);
+	dest.x = (int)(x * maxside);//set x and y
+	dest.y = (int)(y * maxside);
+
 	if (center){
 		dest.x = dest.x - dest.w / 2;//set x and y centered to x and y
 		dest.y = dest.y - dest.h / 2;
@@ -769,7 +769,7 @@ Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button butt
 
 
 
-void AddData(int oid, int frame, int x, int y, long int health){//adds this data at end
+void AddData(int oid, int frame, double x, double y, long int health){//adds this data at end
 	Data *data = malloc(sizeof(Data));//make new data object
 	data->oid = oid;//set variables
 	data->frame = frame;
@@ -857,7 +857,7 @@ void ClearData(void){//clear all data from linked list
 
 
 
-Data *GetLayer(int x, int y, int layer){//get object at that point and layer. return null if no object exists
+Data *GetLayer(double x, double y, int layer){//get object at that point and layer. return null if no object exists
 	Data *current;//current data pointer
 	current = end;//set current to end
 	int l = 0;//layer
@@ -868,7 +868,7 @@ Data *GetLayer(int x, int y, int layer){//get object at that point and layer. re
 		rect.h = object->ih;
 		rect.x = (int)(object->iw * current->frame);//set x and y of image to draw
 		rect.y = 0;
-		if (x > current->x && x < current->x + object->iw && y > current->y && y < current->y + object->ih){//if object is in that boundry
+		if (x > current->x && x < current->x + (object->iw / maxside) && y > current->y && y < current->y + (object->ih / maxside)){//if object is in that boundry
 			l++;//count layer up
 			if (l == layer){//if in correct layer
 				return current;//return current object
