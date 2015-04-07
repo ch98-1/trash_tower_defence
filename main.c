@@ -445,7 +445,10 @@ SDL_Texture* GetTextTexture(TTF_Font* font, const char* text, int r, int g, int 
 	color.g = g;
 	color.b = b;
 	color.a = 255;
-	SDL_Surface* surface = TTF_RenderText_Blended(font, text, color);//rendere text as surface
+	char texturetext[256];//text to display for texture
+	strcpy(texturetext, text);//copy text
+	strtok(texturetext, "\n");//remove newline
+	SDL_Surface* surface = TTF_RenderText_Blended(font, texturetext, color);//rendere text as surface
 	if (surface == NULL){//if it could not be loaded
 		printf("could not load text: %s\n", TTF_GetError());//error message
 		exit(EXIT_FAILURE);//exit
