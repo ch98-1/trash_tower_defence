@@ -406,7 +406,7 @@ SDL_Texture* GetTexture(const char *file){//make texture from this file
 		return somethingwentwrong;//something went wrong
 	}
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);//get texture from loaded image
-	if (surface == NULL){//if it could not be converted to texture
+	if (texture == NULL){//if it could not be converted to texture
 		printf("could not create texture: %s\n", SDL_GetError());//error message
 		return somethingwentwrong;//something went wrong
 	}
@@ -454,10 +454,11 @@ SDL_Texture* GetTextTexture(TTF_Font* font, const char* text, int r, int g, int 
 		exit(EXIT_FAILURE);//exit
 	}
 	SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);//get texture from loaded image
-	if (surface == NULL){//if it could not be converted to texture
+	if (texture == NULL){//if it could not be converted to texture
 		printf("could not create texture: %s\n", SDL_GetError());//error message
 		exit(EXIT_FAILURE);//exit
 	}
+	SDL_FreeSurface(surface);//free surface
 	return texture;//return created texture
 }
 
