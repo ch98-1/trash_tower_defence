@@ -104,6 +104,9 @@ int main(int argc, char *argv[]){
 		menu = 1;//need to display menu
 		Message("Could not load save file");//send message that save file could not be loaded
 	}
+	if (map == -1){//if there is no map
+		menu = 1;//go to menu
+	}
 
 
 
@@ -210,12 +213,6 @@ int main(int argc, char *argv[]){
 				ftime++;//increment time
 			}
 
-		}
-
-
-
-		if (map == -1){//if there is no map
-			menu = 1;//go to menu
 		}
 
 		if (difftime(time(NULL), lasttime) >= 1){//if 1 second passed
@@ -377,6 +374,9 @@ void Clicked(long int x, long int y){//x and y positions clicked
 			menu = LoadFile(maps[map][1]);//load that level
 			if (menu == 1){//if still in menu
 				map = -1;//still has no map yet
+			}
+			if (map == -1){//if there is no map
+				menu = 1;//go to menu
 			}
 		}
 		if (clicked == 29){//Canceld
@@ -549,6 +549,7 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 		strcpy(filename, "");//empty path
 	}
 	strcat(filename, file);//append path
+	strtok(filename, "\n");//remove newline
 	FILE *mapfile = fopen(filename, "r");//open map file for reading
 	if (mapfile == NULL){//if map file could not be opened
 		Message("Map could not be opened");//message that map couldn't be opened
@@ -582,6 +583,9 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 	if (fscanf(mapfile, "%d", &map) == EOF){//read map
 		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
+	}
+	if (map == -1){//if there is no map
+		menu = 1;//go to menu
 	}
 	if (fscanf(mapfile, "%d", &pause) == EOF){//read pause
 		Message("Map could not be read");//message that map couldn't be read
@@ -634,8 +638,6 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 		}
 		AddData(oid, frame, x, y, path, health);//add that data
 	}
-
-
 
 
 
