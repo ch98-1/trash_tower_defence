@@ -151,7 +151,6 @@ int main(int argc, char *argv[]){
 					SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);//draw white
 					SDL_RenderClear(renderer);//clear screen
 					SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);//draw black
-					SDL_Rect rect;//rectangle to draw
 					long int y;//y position
 					int i = 0;//counter
 					for (y = 2; y < 30; y++){//for each button
@@ -183,20 +182,14 @@ int main(int argc, char *argv[]){
 
 
 				//test
-				DrawIMG(textures[0], MouseX, MouseY, NULL, 0.25, 0.25, 1);//draw image centered at mouse
-				int x = ((int)((clock() * 100) / CLOCKS_PER_SEC)) % maxside;
-				int y = baseY;
-				DrawText(textures[1], x/maxside, baseY/maxside, NULL, 1);//draw that text at top
-				for (y = 0; y < maxside; y += maxside / 32){
-					DrawText(textures[1], x/maxside, y/maxside, NULL, 1);//draw text
-				}
+				DrawIMG(textures[1], MouseX, MouseY, NULL, 0.25, 0.25, 1);//draw image centered at mouse
 				//end test
-
 
 				Data *current;//current data pointer
 				current = start;//set current to start
 				while (current != NULL){//until current is null
 					Object *object = objects[current->oid];//object for this data
+					object->update(current);//run update function
 					SDL_Rect rect;//rectangle to draw
 					rect.w = object->iw;//set width and height of image to display
 					rect.h = object->ih;
@@ -213,7 +206,7 @@ int main(int argc, char *argv[]){
 		}
 
 
-		SDL_Delay(delay / speed);
+		SDL_Delay((uint32_t)((double)delay / speed));
 	}
 
 	exit(EXIT_SUCCESS);//if it somehow reaches here
@@ -271,9 +264,8 @@ int EventFilter(void* userdata, SDL_Event* e){//event filter
 		break;//get out
 
 	case SDL_APP_WILLENTERFOREGROUND://if entering forgeound
-		LoadFile(SAVE);//load game
-		pause = 0;//unpause pause game
 		delay = DELAY;//higher fps
+		LoadFile(SAVE);//load game
 		return 0;//delete that event
 		break;//get out
 
@@ -376,7 +368,13 @@ void Clicked(long int x, long int y){//x and y positions clicked
 		}
 	}
 	else if(!pause){//if in normal play mode and not paused
-
+		Data *data = GetLayer((double)(x) / maxside, (double)(y) / maxside, 1);//get first data object
+		if (data != NULL){//if pointing at something
+			objects[data->oid]->button(data);//run button function
+			if (objects[data->oid]->selectable){//if selectable
+				objects[data->oid]->status(data);//run status function
+			}
+		}
 	}
 
 
@@ -508,7 +506,7 @@ void DrawBase(void){//draw basic stuff
 
 
 void DrawEdge(void){//draw edge border of screen
-	DrawIMG(textures[2], 0.5, 0.5, NULL, 2, 2, 1);//centered at twice the size of box
+	DrawIMG(textures[0], 0.5, 0.5, NULL, 2, 2, 1);//centered at twice the size of box
 }
 
 
@@ -523,7 +521,7 @@ void DrawEdge(void){//draw edge border of screen
 
 
 int LoadFile(const char *file){//load file in to memory. return 0 for success
-	ClearData;//clear data before loading file
+	ClearData();//clear data before loading file
 	char filename[256];//folder path
 	if (strcmp(file, SAVE)) {//if file is not save file
 		strcpy(filename, RESOURCES);//add folder path
@@ -537,12 +535,50 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 		Message("Map could not be opened");//message that map couldn't be opened
 		return 1;//file loading unsuccessful
 	}
-	
+	//map file:
+	//in order, money, landfill, speed, month, menue, pause, difficulty.
+	//then list of x and y values with -1 as x at end (-1 is required and you only can have up to 31 values)
+	//list of data objects untill end of file
+	if (fscanf(mapfile, "%lf", &money) == EOF){//read money
+		Message("Map could not be read");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
+	if (fscanf(mapfile, "%lf", &landfill) == EOF){//read landfill
+		Message("Map could not be read");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
+	if (fscanf(mapfile, "%lf", &speed) == EOF){//read speed
+		Message("Map could not be read");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
+	if (fscanf(mapfile, "%ld", &month) == EOF){//read month
+		Message("Map could not be read");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
+	if (fscanf(mapfile, "%d", &menue) == EOF){//read menue
+		Message("Map could not be read");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
+	if (menue == 2) menue = 1;//need to draw menue
+	if (fscanf(mapfile, "%d", &pause) == EOF){//read pause
+		Message("Map could not be read");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
+	if (fscanf(mapfile, "%d", &difficulty) == EOF){//read difficulty
+		Message("Map could not be read");//message that map couldn't be opened
+		return 1;//file loading unsuccessful
+	}
 
 
 
 
 
+
+
+
+
+
+	fclose(mapfile);//close file
 	return 0;//success
 }
 
@@ -556,6 +592,43 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 
 
 void Save(void){//save in to save file
+	FILE *mapfile = fopen(SAVE, "w");//open map file for reading
+	if (mapfile == NULL){//if map file could not be opened
+		printf("Savefile could not be made");//message that map couldn't be opened
+		return;//file saving unsuccessful
+	}
+	//map file:
+	//in order, money, landfill, speed, month, menue, pause, difficulty.
+	//then list of x and y values with -1 as x at end (-1 is required and you only can have up to 31 values)
+	//list of data objects untill end of file
+	if (fprintf(mapfile, "%lf\n", money) == EOF){//write money
+		printf("Savefile could not be written");//message that map couldn't be opened
+		return;//file loading unsuccessful
+	}
+	if (fprintf(mapfile, "%lf\n", landfill) == EOF){//write landfill
+		printf("Savefile could not be written");//message that map couldn't be opened
+		return;//file loading unsuccessful
+	}
+	if (fprintf(mapfile, "%lf\n", speed) == EOF){//write speed
+		printf("Savefile could not be written");//message that map couldn't be opened
+		return;//file loading unsuccessful
+	}
+	if (fprintf(mapfile, "%ld\n", month) == EOF){//write month
+		printf("Savefile could not be written");//message that map couldn't be opened
+		return;//file loading unsuccessful
+	}
+	if (fprintf(mapfile, "%d\n", menue) == EOF){//write menue
+		printf("Savefile could not be written");//message that map couldn't be opened
+		return;//file loading unsuccessful
+	}
+	if (fprintf(mapfile, "%d\n", pause) == EOF){//write pause
+		printf("Savefile could not be written");//message that map couldn't be opened
+		return;//file loading unsuccessful
+	}
+	if (fprintf(mapfile, "%d\n", difficulty) == EOF){//write difficulty
+		printf("Savefile could not be written");//message that map couldn't be opened
+		return;//file loading unsuccessful
+	}
 
 
 
@@ -563,6 +636,11 @@ void Save(void){//save in to save file
 
 
 
+
+
+
+
+	fclose(mapfile);//close file
 }
 
 
@@ -612,6 +690,9 @@ void LoadMenue(void){//load map files and menue texts
 
 
 void DrawText(SDL_Texture *texture, double x, double y, SDL_Rect *rect, int center){//draw rect of texture at x and y position normalised. Null rect for whole texture. set center to 1 to center to x and y
+	if (texture == NULL) {//if texture passed dosen't exist
+		texture = somethingwentwrong;//set texture to something went wrong
+	}
 	SDL_Rect dest;
 	int w, h, access;//value to fill up
 	long format;
@@ -643,7 +724,9 @@ void DrawText(SDL_Texture *texture, double x, double y, SDL_Rect *rect, int cent
 
 
 void DrawIMG(SDL_Texture *texture, double x, double y, SDL_Rect *rect, double w, double h, int center){//draw rect of texture at x and y position at scale from maxside normalised. Null rect for whole texture. set center to 1 to center to x and y
-	SDL_Rect dest;
+	if (texture == NULL) {//if texture passed dosen't exist
+		texture = somethingwentwrong;//set texture to something went wrong
+	}	SDL_Rect dest;
 	dest.w = (int) (maxside * w);//set width and height
 	dest.h = (int) (maxside * h);
 	dest.x = (int)(x * maxside);//set x and y
@@ -673,9 +756,8 @@ void DrawIMG(SDL_Texture *texture, double x, double y, SDL_Rect *rect, double w,
 
 void LoadObjects(void){//load all objects
 	//add test textures
-	AddTexture(GetTexture("test.png"));//0
-	AddTexture(GetTextTexture(font_32, "Heloooooo WORLD!!!!!!!!", 0, 255, 255));//1
-	AddTexture(GetTexture("border.png"));//2
+	AddTexture(GetTexture("border.png"));//0
+	AddTexture(GetTexture("test.png"));//1
 
 }
 

@@ -45,11 +45,15 @@ int baseX, baseY;//x and y starting point
 SDL_Texture *somethingwentwrong;//image to display if something goes wrong
 SDL_Texture *menuebutton;//manue button texture
 
-double money, landfill, speed;//status of game
-long int month;
-int menue;//if there is menue on screen 0 for normal play, 1 for displaying menue, 2 for menue already displayd
 int map;//which one of 26 map to use
+
+//things saved in map file
+double money, landfill, speed;//status of game
+long int month;//time
+int menue;//if there is menue on screen 0 for normal play, 1 for displaying menue, 2 for menue already displayd
 int pause;//if game is paused or not
+int difficulty;//number telling how much trash to send
+double path[32][2];//path trash will take. end at -1
 
 
 
