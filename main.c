@@ -91,13 +91,19 @@ int main(int argc, char *argv[]){
 	menue = 0;//default no menue at start
 	message = 0;//no message at start
 	LoadMenue();//load map files and menue texts
+	objectssize = 0;//initialise array sizes
+	texturessize = 0;
+	pause = 0;//start without pausing
+	money = 0;//nomoney at start
+	landfill = 0;//empty landfill
+	speed = 1;//normal speed
+	ftime = 0;//reset time
+	difficulty = 0;//easy
+	//load save file last
 	if (LoadFile(SAVE)){//if save file could not be loaded
 		menue = 1;//need to display menue
 		Message("Could not load save file");//send message that save file could not be loaded
 	}
-	objectssize = 0;//initialise array sizes
-	texturessize = 0;
-	pause = 0;//start without pausing
 
 
 
@@ -201,10 +207,16 @@ int main(int argc, char *argv[]){
 
 				DrawEdge();//draw edge
 				SDL_RenderPresent(renderer);//update screen
+				ftime++;//increment time
 			}
 
 		}
 
+		if (difftime(time(NULL), lasttime) >= 1){//if 1 second passed
+			fps = ftime - lastframe;//set fps
+			lasttime = time(NULL);//set new lasttime
+			lastframe = ftime;
+		}
 
 		SDL_Delay((uint32_t)((double)delay / speed));
 	}
@@ -255,6 +267,7 @@ int EventFilter(void* userdata, SDL_Event* e){//event filter
 		Save();//save game
 		pause = 1;//pause game
 		delay = DELAY_SLOW;//lower fps
+		speed = 1;//normal speed
 		return 0;//delete that event
 		break;//get out
 
@@ -540,37 +553,77 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 	//then list of x and y values with -1 as x at end (-1 is required and you only can have up to 31 values)
 	//list of data objects untill end of file
 	if (fscanf(mapfile, "%lf", &money) == EOF){//read money
-		Message("Map could not be read");//message that map couldn't be opened
+		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
 	if (fscanf(mapfile, "%lf", &landfill) == EOF){//read landfill
-		Message("Map could not be read");//message that map couldn't be opened
+		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
 	if (fscanf(mapfile, "%lf", &speed) == EOF){//read speed
-		Message("Map could not be read");//message that map couldn't be opened
+		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
-	if (fscanf(mapfile, "%ld", &month) == EOF){//read month
-		Message("Map could not be read");//message that map couldn't be opened
+	if (fscanf(mapfile, "%lu", &ftime) == EOF){//read month
+		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
 	if (fscanf(mapfile, "%d", &menue) == EOF){//read menue
-		Message("Map could not be read");//message that map couldn't be opened
+		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
 	if (menue == 2) menue = 1;//need to draw menue
 	if (fscanf(mapfile, "%d", &pause) == EOF){//read pause
-		Message("Map could not be read");//message that map couldn't be opened
+		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
 	if (fscanf(mapfile, "%d", &difficulty) == EOF){//read difficulty
-		Message("Map could not be read");//message that map couldn't be opened
+		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
-
-
-
+	int i;//counter
+	for (i = 0; i < 32; i++){
+		if (fscanf(mapfile, "%lf", &path[i][0]) == EOF){//read x
+			Message("Map could not be read");//message that map couldn't be read
+			return 1;//file loading unsuccessful
+		}
+		if (path[i][0] == -1) break;//break if x is -1
+		if (fscanf(mapfile, "%lf", &path[i][1]) == EOF){//read y
+			Message("Map could not be read");//message that map couldn't be read
+			return 1;//file loading unsuccessful
+		}
+	}
+	while (1){
+		int oid;//object id
+		int frame;//which frame it is in
+		double x, y;//x and y position normalised
+		int path;//what element of path it is heading for.-1 for none
+		long int health;//health of object
+		if (fscanf(mapfile, "%d\n", &oid) == EOF){//read object id
+			break;//end of data objects
+		}
+		if (fscanf(mapfile, "%d\n", &frame) == EOF){//read which frame it is in
+			Message("Map could not be read");//message that map couldn't be read
+			return 1;//file loading unsuccessful
+		}
+		if (fscanf(mapfile, "%lf\n", &x) == EOF){//read x position normalised
+			Message("Map could not be read");//message that map couldn't be read
+			return 1;//file loading unsuccessful
+		}
+		if (fscanf(mapfile, "%lf\n", &y) == EOF){//read y position normalised
+			Message("Map could not be read");//message that map couldn't be read
+			return 1;//file loading unsuccessful
+		}
+		if (fscanf(mapfile, "%d\n", &path) == EOF){//read path it is heading for
+			Message("Map could not be read");//message that map couldn't be read
+			return 1;//file loading unsuccessful
+		}
+		if (fscanf(mapfile, "%ld\n\n", &health) == EOF){//read health
+			Message("Map could not be read");//message that map couldn't be read
+			return 1;//file loading unsuccessful
+		}
+		AddData(oid, frame, x, y, path, health);//add that data
+	}
 
 
 
@@ -602,36 +655,75 @@ void Save(void){//save in to save file
 	//then list of x and y values with -1 as x at end (-1 is required and you only can have up to 31 values)
 	//list of data objects untill end of file
 	if (fprintf(mapfile, "%lf\n", money) == EOF){//write money
-		printf("Savefile could not be written");//message that map couldn't be opened
-		return;//file loading unsuccessful
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
 	}
 	if (fprintf(mapfile, "%lf\n", landfill) == EOF){//write landfill
-		printf("Savefile could not be written");//message that map couldn't be opened
-		return;//file loading unsuccessful
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
 	}
 	if (fprintf(mapfile, "%lf\n", speed) == EOF){//write speed
-		printf("Savefile could not be written");//message that map couldn't be opened
-		return;//file loading unsuccessful
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
 	}
-	if (fprintf(mapfile, "%ld\n", month) == EOF){//write month
-		printf("Savefile could not be written");//message that map couldn't be opened
-		return;//file loading unsuccessful
+	if (fprintf(mapfile, "%lu\n", ftime) == EOF){//write month
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
 	}
 	if (fprintf(mapfile, "%d\n", menue) == EOF){//write menue
-		printf("Savefile could not be written");//message that map couldn't be opened
-		return;//file loading unsuccessful
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
 	}
 	if (fprintf(mapfile, "%d\n", pause) == EOF){//write pause
-		printf("Savefile could not be written");//message that map couldn't be opened
-		return;//file loading unsuccessful
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
 	}
-	if (fprintf(mapfile, "%d\n", difficulty) == EOF){//write difficulty
-		printf("Savefile could not be written");//message that map couldn't be opened
-		return;//file loading unsuccessful
+	if (fprintf(mapfile, "%d\n\n", difficulty) == EOF){//write difficulty
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
+	}
+	int i;//counter
+	for (i = 0; i < 32; i++){
+		if (fprintf(mapfile, "%lf\n", path[i][0]) == EOF){//write x
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
+		if (path[i][0] == -1) break;//break if x is -1
+		if (fprintf(mapfile, "%lf\n", path[i][1]) == EOF){//write y
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
 	}
 
-
-
+	Data *current;//current data pointer
+	current = start;//set current to start
+	while (current != NULL){//until current is null
+		if (fprintf(mapfile, "%d\n", current->oid) == EOF){//write object id
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
+		if (fprintf(mapfile, "%d\n", current->frame) == EOF){//write which frame it is in
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
+		if (fprintf(mapfile, "%lf\n", current->x) == EOF){//write x position normalised
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
+		if (fprintf(mapfile, "%lf\n", current->y) == EOF){//write y position normalised
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
+		if (fprintf(mapfile, "%d\n", current->path) == EOF){//write path it is heading for
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
+		if (fprintf(mapfile, "%ld\n\n", current->health) == EOF){//write health
+			printf("Savefile could not be written");//message that map couldn't be saved
+			return;//file saving unsuccessful
+		}
+		current = current->next;//set current to next
+	}
 
 
 
@@ -851,12 +943,13 @@ Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button butt
 
 
 
-void AddData(int oid, int frame, double x, double y, long int health){//adds this data at end
+void AddData(int oid, int frame, double x, double y, int path, long int health){//adds this data at end
 	Data *data = malloc(sizeof(Data));//make new data object
 	data->oid = oid;//set variables
 	data->frame = frame;
 	data->x = x;
 	data->y = y;
+	data->path = path;
 	data->health = health;
 	if (start == NULL && end == NULL){//if both were null
 		start = data;//set data to both

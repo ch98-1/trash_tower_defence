@@ -41,6 +41,9 @@ SDL_Event event;//event
 
 int width, height, maxside;//width and hight and smallest of 2 side of window
 int baseX, baseY;//x and y starting point
+time_t lasttime;//last time mesured
+unsigned long int lastframe;
+unsigned long int fps;//frames per second
 
 SDL_Texture *somethingwentwrong;//image to display if something goes wrong
 SDL_Texture *menuebutton;//manue button texture
@@ -49,7 +52,7 @@ int map;//which one of 26 map to use
 
 //things saved in map file
 double money, landfill, speed;//status of game
-long int month;//time
+unsigned long int ftime;//time. counts up every frame
 int menue;//if there is menue on screen 0 for normal play, 1 for displaying menue, 2 for menue already displayd
 int pause;//if game is paused or not
 int difficulty;//number telling how much trash to send
@@ -64,6 +67,7 @@ typedef struct data{
 	int oid;//object id
 	int frame;//which frame it is in
 	double x, y;//x and y position normalised
+	int path;//what element of path it is heading for.-1 for none
 	long int health;//health of object
 	struct data *next;//1 element next
 }Data;
@@ -128,7 +132,7 @@ void DrawEdge(void);//draw edge border of screen
 unsigned int AddTexture(SDL_Texture *texture);//add texture to memory and return that id
 unsigned int AddObject(Object *object);//add object to memory and return that id
 Object *MakeObject(int iw, int ih, int frames, SDL_Texture *texture, Button button, Button status, Button update, double w, double h, int center, int selectable, int damageable, long int maxhealth);//make object with that paramiters
-void AddData(int oid, int frame, double x, double y, long int health);//adds this data at end
+void AddData(int oid, int frame, double x, double y, int path, long int health);//adds this data at end
 void RemoveData(Data *data);//remove this data
 void ClearData(void);//clear all data from linked list
 Data *GetLayer(double x, double y, int layer);//get object at that point and layer. return null if no object exists
