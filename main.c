@@ -78,7 +78,7 @@ int main(int argc, char *argv[]){
 	start = NULL;//set start and end to null
 	end = NULL;
 	somethingwentwrong = GetTextTexture(font_64, "somethingwentwrong", 0, 0, 0);//image to display if something went wrong
-	menuebutton = GetTexture("menuebutton.png");//texture for menue button
+	menubutton = GetTexture("menubutton.png");//texture for menu button
 
 	//loading message
 	SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);//draw white
@@ -88,9 +88,9 @@ int main(int argc, char *argv[]){
 	SDL_RenderPresent(renderer);//present loading message
 	SDL_DestroyTexture(loading);//don't need this texture
 
-	menue = 0;//default no menue at start
+	menu = 0;//default no menu at start
 	message = 0;//no message at start
-	LoadMenue();//load map files and menue texts
+	Loadmenu();//load map files and menu texts
 	objectssize = 0;//initialise array sizes
 	texturessize = 0;
 	pause = 0;//start without pausing
@@ -101,7 +101,7 @@ int main(int argc, char *argv[]){
 	difficulty = 0;//easy
 	//load save file last
 	if (LoadFile(SAVE)){//if save file could not be loaded
-		menue = 1;//need to display menue
+		menu = 1;//need to display menu
 		Message("Could not load save file");//send message that save file could not be loaded
 	}
 
@@ -152,22 +152,22 @@ int main(int argc, char *argv[]){
 		}
 		else{//if there is no message
 
-			if (menue){//if in menue
-				if (menue == 1){//if you need to display menue
+			if (menu){//if in menu
+				if (menu == 1){//if you need to display menu
 					SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);//draw white
 					SDL_RenderClear(renderer);//clear screen
 					SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);//draw black
 					long int y;//y position
 					int i = 0;//counter
 					for (y = 2; y < 30; y++){//for each button
-						if (y > 2) DrawIMG(menuebutton, 0.5, (double)(y + 0.5) / 32, NULL, 0.5, 0.03125, 1);//draw button texture
-						DrawText(menuetexture[i], 0.5, (double)(y + 0.5) / 32, NULL, 1);//draw button text
+						if (y > 2) DrawIMG(menubutton, 0.5, (double)(y + 0.5) / 32, NULL, 0.5, 0.03125, 1);//draw button texture
+						DrawText(menutexture[i], 0.5, (double)(y + 0.5) / 32, NULL, 1);//draw button text
 						i++;//count i up
 					}
 
 					DrawEdge();//draw edge
 					SDL_RenderPresent(renderer);//update screen
-					menue = 2;
+					menu = 2;
 				}
 
 			}
@@ -210,6 +210,12 @@ int main(int argc, char *argv[]){
 				ftime++;//increment time
 			}
 
+		}
+
+
+
+		if (map == -1){//if there is no map
+			menu = 1;//go to menu
 		}
 
 		if (difftime(time(NULL), lasttime) >= 1){//if 1 second passed
@@ -317,8 +323,8 @@ void Quit(void){//quit everything
 	for (i = 0; i < texturessize / sizeof(SDL_Texture*); i++){//destroy each texture
 		SDL_DestroyTexture(textures[i]);//destroy texture
 	}
-	for (i = 0; i < 28; i++){//destroy each menue texture
-		SDL_DestroyTexture(menuetexture[i]);//destroy texture
+	for (i = 0; i < 28; i++){//destroy each menu texture
+		SDL_DestroyTexture(menutexture[i]);//destroy texture
 	}
 	free(textures);//free textures array
 	free(objects);//free objects array
@@ -364,19 +370,19 @@ void GetDisplay(void){//get display
 
 
 void Clicked(long int x, long int y){//x and y positions clicked
-	if (menue && !message && x > 0 && x < maxside){//if in menue and not in message and in right area
+	if (menu && !message && x > 0 && x < maxside){//if in menu and not in message and in right area
 		int clicked = y / (maxside / 32);//which button was clicked
 		if (clicked > 2 && clicked < 29){ //if within the range of levels
 			map = clicked - 3;//get clicked button
-			menue = LoadFile(maps[map][1]);//load that level
-			if (menue == 1){//if still in menue
+			menu = LoadFile(maps[map][1]);//load that level
+			if (menu == 1){//if still in menu
 				map = -1;//still has no map yet
 			}
 		}
 		if (clicked == 29){//Canceld
-			menue = 0;//stop showing menue
+			menu = 0;//stop showing menu
 			if (map == -1){//if there is no map
-				menue = 1;//go to menue
+				menu = 1;//go to menu
 			}
 		}
 	}
@@ -549,7 +555,7 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 		return 1;//file loading unsuccessful
 	}
 	//map file:
-	//in order, money, landfill, speed, month, menue, pause, difficulty.
+	//in order, money, landfill, speed, month, menu, pause, map, difficulty.
 	//then list of x and y values with -1 as x at end (-1 is required and you only can have up to 31 values)
 	//list of data objects untill end of file
 	if (fscanf(mapfile, "%lf", &money) == EOF){//read money
@@ -568,11 +574,15 @@ int LoadFile(const char *file){//load file in to memory. return 0 for success
 		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
-	if (fscanf(mapfile, "%d", &menue) == EOF){//read menue
+	if (fscanf(mapfile, "%d", &menu) == EOF){//read menu
 		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
 	}
-	if (menue == 2) menue = 1;//need to draw menue
+	if (menu == 2) menu = 1;//need to draw menu
+	if (fscanf(mapfile, "%d", &map) == EOF){//read map
+		Message("Map could not be read");//message that map couldn't be read
+		return 1;//file loading unsuccessful
+	}
 	if (fscanf(mapfile, "%d", &pause) == EOF){//read pause
 		Message("Map could not be read");//message that map couldn't be read
 		return 1;//file loading unsuccessful
@@ -651,7 +661,7 @@ void Save(void){//save in to save file
 		return;//file saving unsuccessful
 	}
 	//map file:
-	//in order, money, landfill, speed, month, menue, pause, difficulty.
+	//in order, money, landfill, speed, month, menu, pause, difficulty.
 	//then list of x and y values with -1 as x at end (-1 is required and you only can have up to 31 values)
 	//list of data objects untill end of file
 	if (fprintf(mapfile, "%lf\n", money) == EOF){//write money
@@ -670,7 +680,11 @@ void Save(void){//save in to save file
 		printf("Savefile could not be written");//message that map couldn't be saved
 		return;//file saving unsuccessful
 	}
-	if (fprintf(mapfile, "%d\n", menue) == EOF){//write menue
+	if (fprintf(mapfile, "%d\n", menu) == EOF){//write menu
+		printf("Savefile could not be written");//message that map couldn't be saved
+		return;//file saving unsuccessful
+	}
+	if (fprintf(mapfile, "%d\n", map) == EOF){//write map
 		printf("Savefile could not be written");//message that map couldn't be saved
 		return;//file saving unsuccessful
 	}
@@ -744,7 +758,7 @@ void Save(void){//save in to save file
 
 
 
-void LoadMenue(void){//load map files and menue texts
+void Loadmenu(void){//load map files and menu texts
 	char mapfilename[256] = RESOURCES;//folder path
 	strcat(mapfilename, MAP);//append path
 	FILE *mapfile = fopen(mapfilename, "r");//open map file for reading
@@ -763,13 +777,13 @@ void LoadMenue(void){//load map files and menue texts
 			exit(EXIT_FAILURE);//exit
 		}
 	}
-	menuetexture[0] = GetTextTexture(font_46, "Choose Level", 0, 0, 0);//Title of menue
+	menutexture[0] = GetTextTexture(font_46, "Choose Level", 0, 0, 0);//Title of menu
 	char text[512];
 	for (i = 0; i < 26; i++){//for each map
 		sprintf(text, "%d: %s", i, maps[i][0]);//start name with number then 
-		menuetexture[i + 1] = GetTextTexture(font_46, text, 0, 0, 0);//load text as texture
+		menutexture[i + 1] = GetTextTexture(font_46, text, 0, 0, 0);//load text as texture
 	}
-	menuetexture[27] = GetTextTexture(font_46, "Cancel", 0, 0, 0);//Cancel button
+	menutexture[27] = GetTextTexture(font_46, "Cancel", 0, 0, 0);//Cancel button
 }
 
 

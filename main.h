@@ -32,7 +32,7 @@ SDL_Texture *messagetexture;//message to display
 int message;//0 for no message, 1 for undisplayd message, 2 for displayd message
 
 char maps[26][2][256];//map name and path for each of 26 maps [map number][0 for name, 1 for path] maximum 256 characters
-SDL_Texture *menuetexture[28];//texture for 28 texts on the menue
+SDL_Texture *menutexture[28];//texture for 28 texts on the menu
 
 SDL_DisplayMode display;//display mode 
 SDL_Window *window;//sdl window
@@ -46,15 +46,16 @@ unsigned long int lastframe;
 unsigned long int fps;//frames per second
 
 SDL_Texture *somethingwentwrong;//image to display if something goes wrong
-SDL_Texture *menuebutton;//manue button texture
+SDL_Texture *menubutton;//manue button texture
 
-int map;//which one of 26 map to use
+
 
 //things saved in map file
 double money, landfill, speed;//status of game
 unsigned long int ftime;//time. counts up every frame
-int menue;//if there is menue on screen 0 for normal play, 1 for displaying menue, 2 for menue already displayd
+int menu;//if there is menu on screen 0 for normal play, 1 for displaying menu, 2 for menu already displayd
 int pause;//if game is paused or not
+int map;//which one of 26 map to use
 int difficulty;//number telling how much trash to send
 double path[32][2];//path trash will take. end at -1
 
@@ -124,7 +125,7 @@ void DrawBase(void);//draw basic stuff
 void Message(const char *text);//display message in 
 int LoadFile(const char *file);//load file in to memory. return 0 for success
 void Save(void);//save in to save file
-void LoadMenue(void);//load map files and menue texts
+void Loadmenu(void);//load map files and menu texts
 void DrawText(SDL_Texture *texture, double x, double y, SDL_Rect *rect, int center);//draw rect of texture at x and y position normalised. Null rect for whole texture. set center to 1 to center to x and y
 void DrawIMG(SDL_Texture *texture, double x, double y, SDL_Rect *rect, double w, double h, int center);//draw rect of texture at x and y position normalised at scale from maxside. Null rect for whole texture. set center to 1 to center to x and y
 void LoadObjects(void);//load all objects
