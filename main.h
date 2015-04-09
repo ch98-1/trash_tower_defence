@@ -97,6 +97,7 @@ unsigned long int texturessize;//size of textures array
 
 Data *start;//first object to draw in the linked list, bottom layer
 Data *end;//last object to draw in the linked list, top layer
+Data *selected;//selected object. resets itself after saving and loading. check before using
 
 uint32_t delay;//amount of delay for each frame
 double MouseX, MouseY;//x and y position of mouse / touch normalised

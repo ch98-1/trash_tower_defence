@@ -99,6 +99,7 @@ int main(int argc, char *argv[]){
 	speed = 1;//normal speed
 	ftime = 0;//reset time
 	difficulty = 0;//easy
+	selected = NULL;//nothing is selected. resets itself after saving and loading. check before using
 	//load save file last
 	if (LoadFile(SAVE)){//if save file could not be loaded
 		menu = 1;//need to display menu
@@ -391,7 +392,11 @@ void Clicked(long int x, long int y){//x and y positions clicked
 		if (data != NULL){//if pointing at something
 			objects[data->oid]->button(data);//run button function
 			if (objects[data->oid]->selectable){//if selectable
+				selected = data;//set selected object
 				objects[data->oid]->status(data);//run status function
+			}
+			else{//if not selectable
+				selected = NULL;//nothing is selected. resets itself after saving and loading. check before using
 			}
 		}
 	}
@@ -1030,6 +1035,7 @@ void RemoveData(Data *data){//remove this data
 
 
 void ClearData(void){//clear all data from linked list
+	selected = NULL;//nothing is selected. resets itself after saving and loading. check before using
 	while (start != NULL){//until start is null
 		Data *next = start->next;//copy next
 		free(start);//free memory of next
