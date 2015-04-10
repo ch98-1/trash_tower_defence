@@ -138,6 +138,7 @@ void AddData(int oid, int frame, double x, double y, int path, long int health);
 void RemoveData(Data *data);//remove this data
 void ClearData(void);//clear all data from linked list
 Data *GetLayer(double x, double y, int layer);//get object at that point and layer. return null if no object exists
+void RemoveSatus(void);//remove status buttonds and unselect all object
 
 
 #endif
