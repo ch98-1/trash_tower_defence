@@ -190,11 +190,6 @@ int main(int argc, char *argv[]){
 
 
 
-
-				//test
-				DrawIMG(textures[1], MouseX, MouseY, NULL, 0.25, 0.25, 1);//draw image centered at mouse
-				//end test
-
 				Data *current;//current data pointer
 				current = start;//set current to start
 				while (current != NULL){//until current is null
@@ -205,7 +200,12 @@ int main(int argc, char *argv[]){
 					rect.h = object->ih;
 					rect.x = (int)(object->iw * current->frame);//set x and y of image to draw
 					rect.y = 0;
-					DrawIMG(object->texture, current->x, current->y, &rect, object->w, object->h, object->center);//draw that texture
+					if (object->frames = 0){
+						DrawIMG(object->texture, current->x, current->y, NULL, object->w, object->h, object->center);//draw that whole texture 
+					}
+					else{
+						DrawIMG(object->texture, current->x, current->y, &rect, object->w, object->h, object->center);//draw part of that texture
+					}
 					current = current->next;//set current to next
 				}
 
@@ -868,7 +868,17 @@ void DrawIMG(SDL_Texture *texture, double x, double y, SDL_Rect *rect, double w,
 void LoadObjects(void){//load all objects
 	//add test textures
 	AddTexture(GetTexture("border.png"));//0
-	AddTexture(GetTexture("test.png"));//1
+	AddTexture(GetTextTexture(font_32, "Menu", 0, 0, 0));//1
+
+
+
+
+
+
+
+
+
+	AddObject(MakeObject(0, 0, 0, textures[1], &Menu, &Nothing, &Nothing, 3.463 / 32, 1 / 32, 0, 0, 0, 1));//menue button 0
 
 }
 
@@ -1058,12 +1068,7 @@ Data *GetLayer(double x, double y, int layer){//get object at that point and lay
 	int l = 0;//layer
 	while (current != NULL){//until current is null
 		Object *object = objects[current->oid];//object for this data
-		SDL_Rect rect;//rectangle to draw
-		rect.w = object->iw;//set width and height of image to display
-		rect.h = object->ih;
-		rect.x = (int)(object->iw * current->frame);//set x and y of image to draw
-		rect.y = 0;
-		if (x > current->x && x < current->x + (object->iw / maxside) && y > current->y && y < current->y + (object->ih / maxside)){//if object is in that boundry
+		if (x > current->x && x < current->x + object->w && y > current->y && y < current->y + object->h){//if object is in that boundry
 			l++;//count layer up
 			if (l == layer){//if in correct layer
 				return current;//return current object
@@ -1091,6 +1096,50 @@ void RemoveSatus(void){//remove status buttonds and unselect all object
 	selected = NULL;//deselect object
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Menu(Data *data){//go to meue
+	menu = 1;//go to menue
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void Nothing(Data *data){}//do nothing
+
+
+
+
+
+
+
+
+
+
 
 
 

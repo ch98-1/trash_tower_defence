@@ -76,13 +76,13 @@ typedef struct data{
 typedef void(*Button)(Data *);//function for buttons
 
 typedef struct object{//array of clickable object definitions
-	int iw, ih;//width and height of image to display same as hitbox
-	int frames;//number of frames
+	int iw, ih;//width and height of image to display 
+	int frames;//number of frames set to 0 for full image
 	SDL_Texture *texture;//id of pointer to texture
 	Button button;//button function to run if clicked on
 	Button status;//id of function to display status bar while selected
 	Button update;//id of function to update every frame
-	double w, h;//width, and hight in scale from maxside
+	double w, h;//width, and hight in scale from maxside same as hitbox
 	int center;//if centering on x and y or not
 	int selectable;//if selectable or not
 	int damageable;//if object is possible to damage or not
@@ -139,6 +139,9 @@ void RemoveData(Data *data);//remove this data
 void ClearData(void);//clear all data from linked list
 Data *GetLayer(double x, double y, int layer);//get object at that point and layer. return null if no object exists
 void RemoveSatus(void);//remove status buttonds and unselect all object
+
+void Menu(Data *data);//go to meue
+void Nothing(Data *data);//do nothing
 
 
 #endif
